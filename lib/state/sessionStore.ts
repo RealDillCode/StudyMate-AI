@@ -3,6 +3,7 @@ import { sessionApi } from '@/mocks/services/sessionApi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { isEnabled as isScreenTimeEnabled, requestAuthorization, startWorkLimit, stopWorkLimit } from '@/lib/services/ScreenTimeService';
 import { logger } from '@/lib/logger';
+import { captureEvent } from '@/lib/telemetry';
 
 export type SessionStatus = 'idle' | 'starting' | 'active' | 'stopping';
 
@@ -70,11 +71,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
     const res = await sessionApi.start();
     set({ status: 'active', currentSessionId: res.sessionId, startedAt: res.startedAt, events: [] });
+    captureEvent({ type: 'session_started', sessionId: res.sessionId, startedAt: res.startedAt });
   },
   requestBypass: () => {
     if (get().status !== 'active') return;
     const newEvent: SessionEvent = { type: 'bypass', at: new Date().toISOString() };
     set({ events: [...get().events, newEvent] });
+    captureEvent({ type: 'shield_bypass', at: newEvent.at });
   },
   stopSession: async () => {
     if (get().status !== 'active') return null;
@@ -92,6 +95,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
 
     set({ status: 'idle', currentSessionId: null, startedAt: null, events: [] });
+    captureEvent({ type: 'session_ended', sessionId: id, endedAt, durationSeconds });
     return record;
   },
 }));

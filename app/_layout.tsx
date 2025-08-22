@@ -11,6 +11,7 @@ import { AppStoreProvider } from "@/hooks/useAppStore";
 import { AuthProvider } from "@/hooks/useAuth";
 import { UserProfileProvider } from "@/hooks/useUserProfile";
 import { trpc, trpcClient } from "@/lib/trpc";
+import { initSentry } from '@/lib/telemetry';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -34,6 +35,7 @@ function Fallback() {
 
 export default function RootLayout() {
 	useEffect(() => {
+		initSentry();
 		SplashScreen.hideAsync();
 	}, []);
 

@@ -5,7 +5,10 @@
   "scripts": {
     "start": "bunx rork start -p kjt9kbnf8tpvfyhhd1e8e --tunnel",
     "start-web": "bunx rork start -p kjt9kbnf8tpvfyhhd1e8e --web --tunnel",
-    "start-web-dev": "DEBUG=expo* bunx rork start -p kjt9kbnf8tpvfyhhd1e8e --web --tunnel"
+    "start-web-dev": "DEBUG=expo* bunx rork start -p kjt9kbnf8tpvfyhhd1e8e --web --tunnel",
+    "dev": "expo start",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
@@ -14,6 +17,7 @@
     "@nkzw/create-context-hook": "^1.1.0",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-navigation/native": "^7.1.6",
+    "@sentry/react-native": "^6.20.0",
     "@tanstack/react-query": "^5.85.5",
     "@trpc/client": "^11.5.0",
     "@trpc/react-query": "^11.5.0",
@@ -50,6 +54,7 @@
     "react-native-screens": "~4.10.0",
     "react-native-svg": "15.11.2",
     "react-native-web": "^0.20.0",
+    "sentry-expo": "^7.2.0",
     "superjson": "^2.2.2",
     "zod": "^4.0.17",
     "zustand": "^5.0.2"
