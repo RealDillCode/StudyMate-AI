@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { sessionApi } from '@/mocks/services/sessionApi';
 
 export type SessionStatus = 'idle' | 'starting' | 'active' | 'stopping';
 
@@ -17,15 +18,14 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   startSession: async () => {
     if (get().status === 'active' || get().status === 'starting') return;
     set({ status: 'starting' });
-    await new Promise((r) => setTimeout(r, 300));
-    const id = 'sess_' + Date.now();
-    const now = new Date().toISOString();
-    set({ status: 'active', currentSessionId: id, startedAt: now });
+    const res = await sessionApi.start();
+    set({ status: 'active', currentSessionId: res.sessionId, startedAt: res.startedAt });
   },
   stopSession: async () => {
     if (get().status !== 'active') return;
     set({ status: 'stopping' });
-    await new Promise((r) => setTimeout(r, 300));
+    const id = get().currentSessionId!;
+    await sessionApi.stop(id);
     set({ status: 'idle', currentSessionId: null, startedAt: null });
   },
 }));

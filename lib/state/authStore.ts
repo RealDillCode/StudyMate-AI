@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import * as SecureStore from 'expo-secure-store';
+import { authApi } from '@/mocks/services/authApi';
+import { licenseApi } from '@/mocks/services/licenseApi';
 
 export type AuthUser = {
   id: string;
@@ -35,22 +37,21 @@ export const useAuthStore = create<AuthState>()(
       orgId: null,
       hydrated: false,
       setHydrated: (value: boolean) => set({ hydrated: value }),
-      signIn: async (email: string, _password: string) => {
-        // Mock sign-in: generate tokens and a user object
-        const mockAccess = 'mock_access_' + Date.now();
-        const mockRefresh = 'mock_refresh_' + Date.now();
-        const mockUser: AuthUser = { id: 'user_' + Date.now(), email, name: email.split('@')[0] };
-        set({ accessToken: mockAccess, refreshToken: mockRefresh, user: mockUser });
+      signIn: async (email: string, password: string) => {
+        const res = await authApi.login({ email, password });
+        set({
+          accessToken: res.accessToken,
+          refreshToken: res.refreshToken,
+          user: res.user,
+        });
       },
       signOut: async () => {
         set({ accessToken: null, refreshToken: null, user: null, orgId: null });
-        // Also clear persisted values
         await SecureStore.deleteItemAsync('auth_store');
       },
       redeemCode: async (code: string) => {
-        // Mock redeem: accept any non-empty code
-        if (!code.trim()) return;
-        set({ orgId: code.trim().toUpperCase() });
+        const res = await licenseApi.redeem({ code });
+        set({ orgId: res.orgId });
       },
     }),
     {
@@ -58,7 +59,6 @@ export const useAuthStore = create<AuthState>()(
       storage: createJSONStorage(() => secureStorage),
       partialize: (state) => ({ accessToken: state.accessToken, refreshToken: state.refreshToken, orgId: state.orgId }),
       onRehydrateStorage: () => (state) => {
-        // Called after state is rehydrated
         state?.setHydrated(true);
       },
     }
