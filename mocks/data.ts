@@ -7,21 +7,38 @@ export const mockWorkSchedule: WorkSchedule = {
     start: '09:00',
     end: '17:00',
   },
+  isFlexible: false,
+  timezone: 'UTC',
   breakSchedule: [
     {
+      id: 'bp_lunch',
       type: 'lunch',
       duration: 60,
-      startTime: '12:00',
+      isPaid: true,
+      pausesClock: true,
+      isRequired: false,
+      scheduledTime: '12:00',
+      maxPerDay: 1,
     },
     {
+      id: 'bp_coffee_am',
       type: 'coffee',
       duration: 15,
-      startTime: '10:30',
+      isPaid: false,
+      pausesClock: true,
+      isRequired: false,
+      scheduledTime: '10:30',
+      maxPerDay: 2,
     },
     {
+      id: 'bp_coffee_pm',
       type: 'coffee',
       duration: 15,
-      startTime: '15:30',
+      isPaid: false,
+      pausesClock: true,
+      isRequired: false,
+      scheduledTime: '15:30',
+      maxPerDay: 2,
     },
   ],
 };
@@ -31,9 +48,15 @@ export const mockUserProfile: UserProfile = {
   id: '1',
   name: 'John Doe',
   email: 'john.doe@company.com',
+  profileType: 'employee',
   role: 'Software Developer',
   department: 'Engineering',
-  workSchedule: mockWorkSchedule,
+  companyId: 'company_123',
+  workSchedule: {
+    ...mockWorkSchedule,
+    isFlexible: false,
+    timezone: 'UTC',
+  },
   allowedApps: [
     'Slack',
     'Microsoft Teams',
@@ -44,6 +67,8 @@ export const mockUserProfile: UserProfile = {
     'Notion',
     'Figma',
   ],
+  createdAt: new Date(),
+  updatedAt: new Date(),
 };
 
 // Mock work sessions
@@ -62,6 +87,8 @@ export const mockWorkSessions: WorkSession[] = [
         duration: 60 * 60 * 1000, // 1 hour in milliseconds
         isActive: false,
         type: 'lunch',
+        isPaid: true,
+        pausesClock: true,
       },
       {
         id: '2',
@@ -70,6 +97,8 @@ export const mockWorkSessions: WorkSession[] = [
         duration: 15 * 60 * 1000, // 15 minutes in milliseconds
         isActive: false,
         type: 'coffee',
+        isPaid: false,
+        pausesClock: true,
       },
       {
         id: '3',
@@ -78,6 +107,8 @@ export const mockWorkSessions: WorkSession[] = [
         duration: 15 * 60 * 1000, // 15 minutes in milliseconds
         isActive: false,
         type: 'coffee',
+        isPaid: false,
+        pausesClock: true,
       },
     ],
   },
@@ -88,14 +119,16 @@ export const mockWorkSessions: WorkSession[] = [
     duration: 8 * 60 * 60 * 1000, // 8 hours in milliseconds
     isActive: false,
     breaks: [
-      {
-        id: '4',
-        startTime: new Date(new Date().setDate(new Date().getDate() - 1)),
-        endTime: new Date(new Date().setDate(new Date().getDate() - 1)),
-        duration: 60 * 60 * 1000, // 1 hour in milliseconds
-        isActive: false,
-        type: 'lunch',
-      },
+        {
+    id: '4',
+    startTime: new Date(new Date().setDate(new Date().getDate() - 1)),
+    endTime: new Date(new Date().setDate(new Date().getDate() - 1)),
+    duration: 60 * 60 * 1000, // 1 hour in milliseconds
+    isActive: false,
+    type: 'lunch',
+    isPaid: true,
+    pausesClock: true,
+  },
     ],
   },
 ];
@@ -163,6 +196,8 @@ export const mockBreaks: Break[] = [
     duration: 60 * 60 * 1000, // 1 hour in milliseconds
     isActive: false,
     type: 'lunch',
+    isPaid: true,
+    pausesClock: true,
   },
   {
     id: '2',
@@ -171,6 +206,8 @@ export const mockBreaks: Break[] = [
     duration: 15 * 60 * 1000, // 15 minutes in milliseconds
     isActive: false,
     type: 'coffee',
+    isPaid: false,
+    pausesClock: true,
   },
   {
     id: '3',
@@ -179,5 +216,7 @@ export const mockBreaks: Break[] = [
     duration: 15 * 60 * 1000, // 15 minutes in milliseconds
     isActive: false,
     type: 'coffee',
+    isPaid: false,
+    pausesClock: true,
   },
 ];
