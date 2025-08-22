@@ -144,6 +144,8 @@ export function useWorkSession() {
       duration: null,
       isActive: true,
       type,
+      isPaid: false,
+      pausesClock: true,
     };
 
     const updatedSession: WorkSession = {
