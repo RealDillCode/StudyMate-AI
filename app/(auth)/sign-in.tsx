@@ -8,8 +8,8 @@ import { Button } from '@/components/Button';
 import { useAuthStore } from '@/lib/state/authStore';
 
 const schema = z.object({
-	email: z.string().email(),
-	password: z.string().min(6),
+	email: z.string().min(5).email(),
+	password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 type FormValues = z.infer<typeof schema>;

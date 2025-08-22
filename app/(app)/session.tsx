@@ -17,7 +17,7 @@ function formatDuration(ms: number) {
 export default function SessionScreen() {
 	const scheme = useColorScheme();
 	const isDark = scheme === 'dark';
-	const { status, startedAt, stopSession, requestBypass } = useSessionStore();
+	const { status, startedAt, stopSession, requestBypass, screenTimeAuthorized } = useSessionStore();
 	const [now, setNow] = useState(Date.now());
 
 	useEffect(() => {
@@ -40,6 +40,11 @@ export default function SessionScreen() {
 	return (
 		<View style={[styles.container, { backgroundColor: isDark ? Colors.gray[900] : Colors.gray[50] }]}> 
 			<Text style={[styles.title, { color: isDark ? Colors.white : Colors.black }]}>Active Session</Text>
+			{!screenTimeAuthorized && (
+				<View style={{ backgroundColor: Colors.warning, padding: 8, borderRadius: 8, marginBottom: 8 }}>
+					<Text style={{ color: Colors.black }}>ScreenTime authorization not granted. Shield may be inactive.</Text>
+				</View>
+			)}
 			<Text style={[styles.timer, { color: isDark ? Colors.white : Colors.black }]} accessibilityRole="text" accessibilityLabel={`Elapsed ${formatDuration(elapsed)}`}>{formatDuration(elapsed)}</Text>
 			<View style={{ height: 12 }} />
 			<ShieldStatusBanner />

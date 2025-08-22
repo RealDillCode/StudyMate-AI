@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { sessionApi } from '@/mocks/services/sessionApi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { isEnabled as isScreenTimeEnabled, requestAuthorization, startWorkLimit, stopWorkLimit } from '@/lib/services/ScreenTimeService';
+import { logger } from '@/lib/logger';
 
 export type SessionStatus = 'idle' | 'starting' | 'active' | 'stopping';
 
@@ -19,12 +21,14 @@ export type SessionState = {
   currentSessionId: string | null;
   startedAt: string | null; // ISO string
   events: SessionEvent[];
+  screenTimeAuthorized: boolean;
   startSession: () => Promise<void>;
   requestBypass: () => void;
   stopSession: () => Promise<CompletedSession | null>;
 };
 
 const STORAGE_KEY = 'optivise:sessions';
+const AUTH_REQ_KEY = 'optivise:st_auth_requested';
 
 async function appendCompletedSession(record: CompletedSession): Promise<void> {
   try {
@@ -33,7 +37,7 @@ async function appendCompletedSession(record: CompletedSession): Promise<void> {
     parsed.unshift(record);
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
   } catch (e) {
-    console.error('Failed to persist session history', e);
+    logger.error('Failed to persist session history', e);
   }
 }
 
@@ -42,9 +46,28 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   currentSessionId: null,
   startedAt: null,
   events: [],
+  screenTimeAuthorized: true,
   startSession: async () => {
     if (get().status === 'active' || get().status === 'starting') return;
     set({ status: 'starting' });
+
+    if (isScreenTimeEnabled()) {
+      const alreadyRequested = await AsyncStorage.getItem(AUTH_REQ_KEY);
+      if (!alreadyRequested) {
+        const ok = await requestAuthorization();
+        await AsyncStorage.setItem(AUTH_REQ_KEY, '1');
+        if (!ok) {
+          set({ screenTimeAuthorized: false });
+        } else {
+          set({ screenTimeAuthorized: true });
+        }
+      }
+      if (get().screenTimeAuthorized) {
+        const now = new Date();
+        await startWorkLimit({ start: `${now.getHours()}:${now.getMinutes()}`, end: '23:59', days: [0,1,2,3,4,5,6] });
+      }
+    }
+
     const res = await sessionApi.start();
     set({ status: 'active', currentSessionId: res.sessionId, startedAt: res.startedAt, events: [] });
   },
@@ -63,6 +86,11 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     const durationSeconds = stopRes.durationSeconds || Math.max(1, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000));
     const record: CompletedSession = { id, startedAt, endedAt, durationSeconds, events: get().events };
     await appendCompletedSession(record);
+
+    if (isScreenTimeEnabled()) {
+      await stopWorkLimit();
+    }
+
     set({ status: 'idle', currentSessionId: null, startedAt: null, events: [] });
     return record;
   },
