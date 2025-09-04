@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 350px;
+      min-height: 400px;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .container {
+      padding: 16px;
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .logo {
+      width: 32px;
+      height: 32px;
+      margin-right: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+    
+    h1 {
+      margin: 0;
+      font-size: 18px;
+      color: #1f2937;
+    }
+    
+    .status {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+    
+    .status.connected {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    
+    .status.disconnected {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    button {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: #4f46e5;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #4338ca;
+    }
+    
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+    
+    .btn-secondary:hover {
+      background: #e5e7eb;
+    }
+    
+    .btn-success {
+      background: #10b981;
+      color: white;
+    }
+    
+    .import-options {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+    
+    .import-options h3 {
+      font-size: 14px;
+      color: #6b7280;
+      margin: 0 0 12px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+      padding: 16px;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+    
+    .stat {
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #4f46e5;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+    
+    .login-form {
+      display: none;
+    }
+    
+    .login-form.active {
+      display: block;
+    }
+    
+    input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-bottom: 12px;
+      box-sizing: border-box;
+    }
+    
+    .help-text {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+    
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #4f46e5;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 8px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">SA</div>
+      <h1>Study Assistant</h1>
+    </div>
+    
+    <div id="status" class="status disconnected">
+      Not connected to Study Assistant
+    </div>
+    
+    <div id="login-form" class="login-form active">
+      <input type="email" id="email" placeholder="Email" />
+      <input type="password" id="password" placeholder="Password" />
+      <button id="login-btn" class="btn-primary" style="width: 100%">
+        Connect to Study Assistant
+      </button>
+      <p class="help-text">
+        Log in with your Study Assistant account to start importing Canvas content.
+      </p>
+    </div>
+    
+    <div id="main-content" style="display: none;">
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value" id="courses-count">0</div>
+          <div class="stat-label">Courses</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="materials-count">0</div>
+          <div class="stat-label">Materials</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="sync-count">0</div>
+          <div class="stat-label">Synced</div>
+        </div>
+      </div>
+      
+      <div class="actions">
+        <button id="import-page" class="btn-primary">
+          📄 Import Current Page
+        </button>
+        <button id="import-course" class="btn-secondary">
+          📚 Import Entire Course
+        </button>
+        <button id="auto-sync" class="btn-secondary">
+          🔄 Enable Auto-Sync
+        </button>
+      </div>
+      
+      <div class="import-options">
+        <h3>Quick Actions</h3>
+        <div class="actions">
+          <button id="import-assignments" class="btn-secondary">
+            Import All Assignments
+          </button>
+          <button id="import-syllabus" class="btn-secondary">
+            Import Syllabus
+          </button>
+          <button id="import-files" class="btn-secondary">
+            Import Course Files
+          </button>
+        </div>
+      </div>
+      
+      <button id="open-app" class="btn-success" style="width: 100%; margin-top: 20px;">
+        🚀 Open Study Assistant
+      </button>
+    </div>
+    
+    <div id="loading" style="display: none; text-align: center; padding: 20px;">
+      <div class="spinner"></div>
+      <p style="margin-top: 12px; color: #6b7280;">Importing...</p>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
