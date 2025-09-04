@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
-import { PlusCircle, BookOpen, MessageSquare, Trash2 } from "lucide-react"
+import { PlusCircle, BookOpen, MessageSquare, Trash2, BarChart3, Video, PenTool } from "lucide-react"
+import StudyDashboard from "@/components/progress/study-dashboard"
 import {
   Dialog,
   DialogContent,
@@ -114,6 +115,11 @@ export default function DashboardClient({ initialClasses }: { initialClasses: Cl
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto py-8">
+        {/* Study Progress Dashboard */}
+        <div className="mb-8">
+          <StudyDashboard userId={session?.user?.id || ""} />
+        </div>
+
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">My Classes</h1>
