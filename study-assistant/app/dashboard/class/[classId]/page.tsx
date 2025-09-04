@@ -27,6 +27,14 @@ export default async function ClassDetailPage({
         },
       },
       materials: {
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          fileSize: true,
+          processed: true,
+          createdAt: true,
+        },
         orderBy: {
           createdAt: "desc",
         },

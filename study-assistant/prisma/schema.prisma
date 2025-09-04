@@ -106,18 +106,38 @@ model Message {
 }
 
 model Material {
-  id         String   @id @default(cuid())
-  classId    String
-  name       String
-  type       String   // pdf, doc, image, video, etc.
-  fileUrl    String?
-  fileSize   Int?
-  content    String?  @db.Text // Extracted text content
-  metadata   Json?    // Store embeddings, chunks, etc.
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           String   @id @default(cuid())
+  classId      String
+  name         String
+  originalName String
+  type         String   // pdf, doc, image, video, etc.
+  mimeType     String
+  filePath     String?  // Path to file in storage
+  fileSize     Int?
+  content      String?  @db.Text // Extracted text content
+  summary      String?  @db.Text // AI-generated summary
+  metadata     Json?    // Additional metadata
+  processed    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  class Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+  class  Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
+  chunks MaterialChunk[]
 
   @@index([classId])
+}
+
+model MaterialChunk {
+  id         String   @id @default(cuid())
+  materialId String
+  chunkIndex Int
+  text       String   @db.Text
+  embedding  String   @db.Text // Serialized embedding vector
+  metadata   Json?    // Page number, section, etc.
+  createdAt  DateTime @default(now())
+
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@index([materialId])
+  @@index([chunkIndex])
 }

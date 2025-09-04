@@ -31,8 +31,12 @@ import {
   ArrowLeft,
   Trash2,
   MessageSquare,
-  Upload
+  Upload,
+  Download,
+  CheckCircle,
+  Clock
 } from "lucide-react"
+import FileUpload from "@/components/materials/file-upload"
 
 interface ClassData {
   id: string
@@ -50,6 +54,7 @@ interface ClassData {
     name: string
     type: string
     fileSize: number | null
+    processed: boolean
     createdAt: string
   }>
 }
@@ -63,6 +68,8 @@ export default function ClassDetailClient({ classData }: { classData: ClassData 
   )
   const [isCreatingChat, setIsCreatingChat] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
+  const [materials, setMaterials] = useState(classData.materials)
 
   async function createChat(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -318,37 +325,104 @@ export default function ClassDetailClient({ classData }: { classData: ClassData 
                       Upload and manage your textbooks, notes, and assignments
                     </CardDescription>
                   </div>
-                  <Button>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Upload Material
-                  </Button>
+                  <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Upload Material
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[525px]">
+                      <DialogHeader>
+                        <DialogTitle>Upload Course Material</DialogTitle>
+                        <DialogDescription>
+                          Upload a document to make it searchable by the AI assistant
+                        </DialogDescription>
+                      </DialogHeader>
+                      <FileUpload
+                        classId={classData.id}
+                        onUploadComplete={(material) => {
+                          setMaterials([material, ...materials])
+                          setUploadDialogOpen(false)
+                          toast({
+                            title: "Upload successful",
+                            description: "Your material is being processed",
+                          })
+                        }}
+                      />
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </CardHeader>
               <CardContent>
-                {classData.materials.length === 0 ? (
+                {materials.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12">
                     <FileText className="mb-4 h-12 w-12 text-muted-foreground" />
                     <h3 className="mb-2 text-lg font-semibold">No materials yet</h3>
                     <p className="mb-4 text-sm text-muted-foreground">
                       Upload your first material to get started
                     </p>
+                    <Button onClick={() => setUploadDialogOpen(true)}>
+                      <Upload className="mr-2 h-4 w-4" />
+                      Upload First Material
+                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {classData.materials.map((material) => (
+                    {materials.map((material) => (
                       <div
                         key={material.id}
-                        className="flex items-center justify-between rounded-lg border p-3"
+                        className="flex items-center justify-between rounded-lg border p-3 hover:bg-accent/50 transition-colors"
                       >
                         <div className="flex items-center space-x-3">
                           <FileText className="h-5 w-5 text-muted-foreground" />
                           <div>
                             <p className="text-sm font-medium">{material.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {material.type} • {formatFileSize(material.fileSize)}
-                            </p>
+                            <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                              <span>{material.type.toUpperCase()}</span>
+                              <span>•</span>
+                              <span>{formatFileSize(material.fileSize)}</span>
+                              <span>•</span>
+                              {material.processed ? (
+                                <span className="flex items-center text-green-600">
+                                  <CheckCircle className="mr-1 h-3 w-3" />
+                                  Processed
+                                </span>
+                              ) : (
+                                <span className="flex items-center text-yellow-600">
+                                  <Clock className="mr-1 h-3 w-3" />
+                                  Processing...
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={async () => {
+                            try {
+                              const response = await fetch(`/api/materials/${material.id}`, {
+                                method: "DELETE",
+                              })
+                              if (response.ok) {
+                                setMaterials(materials.filter(m => m.id !== material.id))
+                                toast({
+                                  title: "Material deleted",
+                                  description: "The material has been removed",
+                                })
+                              }
+                            } catch (error) {
+                              toast({
+                                title: "Error",
+                                description: "Failed to delete material",
+                                variant: "destructive",
+                              })
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     ))}
                   </div>

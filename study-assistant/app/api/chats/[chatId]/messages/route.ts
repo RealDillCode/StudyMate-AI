@@ -4,6 +4,11 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { generateAIResponse, sanitizeInput, needsModeration } from "@/lib/gemini"
 import rateLimit from "@/lib/rate-limit"
+import { 
+  searchClassMaterials, 
+  formatRAGContext, 
+  shouldUseRAG 
+} from "@/lib/rag-service"
 
 const limiter = rateLimit({
   interval: 60 * 1000, // 60 seconds
@@ -157,6 +162,21 @@ export async function POST(
       content: sanitizedContent,
     })
 
+    // Check if we should use RAG for this query
+    let ragContext = ""
+    if (shouldUseRAG(sanitizedContent)) {
+      const relevantChunks = await searchClassMaterials(
+        sanitizedContent,
+        chat.class.id,
+        3, // Top 3 chunks
+        0.7 // Similarity threshold
+      )
+      
+      if (relevantChunks.length > 0) {
+        ragContext = formatRAGContext(relevantChunks)
+      }
+    }
+
     // Generate AI response
     let aiResponse: string
     try {
@@ -164,6 +184,7 @@ export async function POST(
         messages: messageHistory,
         aiLevel: (aiLevel || chat.aiLevel) as "study_helper" | "guided" | "autonomous",
         className: chat.class.name,
+        context: ragContext, // Pass RAG context to AI
         temperature: 0.7,
       })
     } catch (error) {
