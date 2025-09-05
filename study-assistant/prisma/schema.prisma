@@ -1,0 +1,143 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Authentication models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String?   @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  password      String?   // For email/password auth
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+  classes  Class[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Application models
+model Class {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  semester    String?
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chats     Chat[]
+  materials Material[]
+
+  @@index([userId])
+}
+
+model Chat {
+  id        String   @id @default(cuid())
+  name      String
+  classId   String
+  aiLevel   String   @default("study_helper") // study_helper, guided, autonomous
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  class    Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@index([classId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  chatId    String
+  role      String   // user, assistant, system
+  content   String   @db.Text
+  metadata  Json?    // Store context used, tokens, etc.
+  createdAt DateTime @default(now())
+
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([chatId])
+}
+
+model Material {
+  id           String   @id @default(cuid())
+  classId      String
+  name         String
+  originalName String
+  type         String   // pdf, doc, image, video, etc.
+  mimeType     String
+  filePath     String?  // Path to file in storage
+  fileSize     Int?
+  content      String?  @db.Text // Extracted text content
+  summary      String?  @db.Text // AI-generated summary
+  metadata     Json?    // Additional metadata
+  processed    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  class  Class           @relation(fields: [classId], references: [id], onDelete: Cascade)
+  chunks MaterialChunk[]
+
+  @@index([classId])
+}
+
+model MaterialChunk {
+  id         String   @id @default(cuid())
+  materialId String
+  chunkIndex Int
+  text       String   @db.Text
+  embedding  String   @db.Text // Serialized embedding vector
+  metadata   Json?    // Page number, section, etc.
+  createdAt  DateTime @default(now())
+
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@index([materialId])
+  @@index([chunkIndex])
+}
